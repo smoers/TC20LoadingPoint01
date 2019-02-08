@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".views.SequenceManagement">
+
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar_sequence_management"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme">
+
+        <ImageButton
+            android:id="@+id/bDelete"
+            style="@style/Widget.AppCompat.Light.ActionButton.CloseMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@mipmap/delete" />
+
+        <ImageButton
+            android:id="@+id/bTransfer"
+            style="@style/Widget.AppCompat.Light.ActionButton.CloseMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@mipmap/transfer" />
+
+        <ImageButton
+            android:id="@+id/bInternetTransfer"
+            style="@style/Widget.AppCompat.Light.ActionButton.CloseMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@mipmap/chrome" />
+
+    </android.support.v7.widget.Toolbar>
+
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="Sequences Management"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textSize="24sp" />
+
+    <ListView
+        android:id="@+id/listSequence"
+        android:layout_width="match_parent"
+        android:layout_height="319dp"
+        android:layout_margin="10dp" />
+
+</LinearLayout>

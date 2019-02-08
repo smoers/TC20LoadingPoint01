@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/miExportSequence"
+        android:title="Export Sequence" />
+    <item
+        android:id="@+id/miProfileSetup"
+        android:title="Profile setup"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/miRemoveSequence"
+        android:title="Remove Sequence" />
+    <item
+        android:id="@+id/miSequenceList"
+        android:title="Sequence List" />
+    <item
+        android:id="@+id/miClose"
+        android:title="Close" />
+</menu>

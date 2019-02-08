@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">TC20 LoadingPoint01</string>
+    <string name="activity_intent_filter_action">com.aerospace.sabena.tc20.loadingpoint.ACTION</string>
+    <string name="activity_action_from_service">com.aerospace.sabena.tc20.loadingpoint.ACTION</string>
+    <string name="datawedge_intent_key_source">com.symbol.datawedge.source</string>
+    <string name="datawedge_intent_key_label_type">com.symbol.datawedge.label_type</string>
+    <string name="datawedge_intent_key_data">com.symbol.datawedge.data_string</string>
+    <string name="server_id">8126206d-520d-4477-a9fc-085c57436ada</string>
+    <string name="server_url">http://loadingpoint.company.corp</string>
+    <string name="server_url_upload">load.php</string>
+    <string name="activity_role_number">rolenumber</string>
+    <string name="filename_prefix">lp</string>
+    <string name="filename_suffix">.txt</string>
+    <integer name="barcode_scanner_sequence_size">2</integer>
+    <integer name="barcode_scanner_delay_reset_role">1800</integer>
+    <integer name="barcode_scanner_delay_reset_sequence">120</integer>
+    <integer name="barcode_scanner_delay_reset_counter">60</integer>
+</resources>
