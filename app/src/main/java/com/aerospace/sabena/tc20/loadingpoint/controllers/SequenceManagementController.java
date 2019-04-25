@@ -6,17 +6,18 @@ import android.widget.Toast;
 
 import com.aerospace.sabena.tc20.loadingpoint.R;
 import com.aerospace.sabena.tc20.loadingpoint.Startup;
+import com.aerospace.sabena.tc20.loadingpoint.models.ConfigurationList;
 import com.aerospace.sabena.tc20.loadingpoint.models.Sequence;
 import com.aerospace.sabena.tc20.loadingpoint.models.Sequences;
+import com.aerospace.sabena.tc20.loadingpoint.providers.ConfigurationStore;
 import com.aerospace.sabena.tc20.loadingpoint.providers.ExternalStore;
 import com.aerospace.sabena.tc20.loadingpoint.providers.InternetStore;
 import com.aerospace.sabena.tc20.loadingpoint.providers.InternalStore;
+import com.aerospace.sabena.tc20.loadingpoint.system.BarcodeOrdering;
 import com.aerospace.sabena.tc20.loadingpoint.system.SequenceFormatter;
 import com.aerospace.sabena.tc20.loadingpoint.views.SequenceManagement;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -28,10 +29,14 @@ public class SequenceManagementController {
     private InternalStore internalStore;
     private Sequences sequences;
     private SequenceManagement sequenceManagement;
+    private ConfigurationStore configurationStore;
+    private ConfigurationList configurationList;
 
     public SequenceManagementController(SequenceManagement sequenceManagement) {
         this.sequenceManagement = sequenceManagement;
         internalStore = new InternalStore(this.sequenceManagement);
+        configurationStore = new ConfigurationStore(sequenceManagement);
+        configurationList = configurationStore.load();
         loadSequences();
     }
 
@@ -80,8 +85,13 @@ public class SequenceManagementController {
     public boolean transfer(){
         boolean result = false;
         ExternalStore store = new ExternalStore(sequenceManagement);
-        SequenceFormatter formatter = new SequenceFormatter(internalStore.loadSequences());
+        //Instance de la classe qui va prendre en charge le tri des codes bar
+        BarcodeOrdering barcodeOrdering = new BarcodeOrdering(configurationList.getConfiguration("barcode_ordering").getConfigurationValue());
+        //Instance de la classe qui va formatter les données de sortie
+        SequenceFormatter formatter = new SequenceFormatter(internalStore.loadSequences(),barcodeOrdering);
+        //nom du fichier
         String fileName = fileNameGenerator();
+        //On s'assure que le store est disponible
         if (store.open()){
             Log.d(Startup.LOG_TAG, "External storage open");
             if (store.write(Environment.DIRECTORY_DOCUMENTS, fileName,formatter.getString())) {
@@ -97,6 +107,10 @@ public class SequenceManagementController {
     }
 
 
+    /**
+     * Tranfert les données vers le serveur web
+     * @return
+     */
     public boolean internetTransfer(){
         //Init result upload
         boolean isUpload = false;
@@ -113,13 +127,15 @@ public class SequenceManagementController {
                     Toast.makeText(sequenceManagement, "Internet upload started", Toast.LENGTH_LONG).show();
                 }
             });            //Si tout est OK
+            //Instance de la classe qui va prendre en charge le tri des codes bar
+            BarcodeOrdering barcodeOrdering = new BarcodeOrdering(configurationList.getConfiguration("barcode_ordering").getConfigurationValue());
             //Instance de la classe qui va formatter les données de sortie
-            SequenceFormatter formatter = new SequenceFormatter(internalStore.loadSequences());
+            SequenceFormatter formatter = new SequenceFormatter(internalStore.loadSequences(),barcodeOrdering);
             //nom du fichier
             String fileName = fileNameGenerator();
             //création du fichier temporaire car l'upload a besoin d'un objet File
             //le fichier est créer dans le répertoire propre au package de l'application
-            //Comme le tranfert est asynchrone le fichier sera détruit pas la classe UploadTask
+            //Comme le tranfert est asynchrone le fichier sera détruit par la classe UploadTask
             File directory = sequenceManagement.getDataDir();
             File file = new File(directory, fileName);
             try {
@@ -169,8 +185,8 @@ public class SequenceManagementController {
      * @return
      */
     public String fileNameGenerator(){
-        String prefix = sequenceManagement.getResources().getString(R.string.filename_prefix);
-        String suffix = sequenceManagement.getResources().getString(R.string.filename_suffix);
+        String prefix = configurationList.getConfiguration("filename_prefix").getStringValue();
+        String suffix = configurationList.getConfiguration("filename_suffix").getStringValue();
         StringJoiner joiner = new StringJoiner("_",prefix,suffix);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssS");
         return  joiner.add(dateFormat.format(Calendar.getInstance().getTime())).toString();

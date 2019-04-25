@@ -25,4 +25,5 @@ public class Barcode {
     public String getCode() {
         return code;
     }
+
 }

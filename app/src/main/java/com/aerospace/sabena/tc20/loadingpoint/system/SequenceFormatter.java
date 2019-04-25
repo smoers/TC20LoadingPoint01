@@ -10,9 +10,16 @@ import java.util.StringJoiner;
 public class SequenceFormatter {
 
     private Sequences sequences;
+    private BarcodeOrdering barcodeOrdering;
 
-    public SequenceFormatter(Sequences sequences) {
+    /**
+     * Contructeur
+     * @param sequences
+     * @param barcodeOrdering
+     */
+    public SequenceFormatter(Sequences sequences, BarcodeOrdering barcodeOrdering) {
         this.sequences = sequences;
+        this.barcodeOrdering =barcodeOrdering;
     }
 
     /**
@@ -28,9 +35,12 @@ public class SequenceFormatter {
             joiner.add(dateFormat.format(sequence.getDate()));
             joiner.add(sequence.getOwner().getRoleNumber());
             joiner.add(String.valueOf(sequence.getSize()));
+            barcodeOrdering.getOrdering(joiner,sequence.getBarcodes());
+            /*
             for (Barcode barcode : sequence.getBarcodes()){
                 joiner.add(barcode.getCode());
             }
+            */
             resultString.append(joiner.toString()).append('\r').append('\n');
         }
         return resultString.toString();

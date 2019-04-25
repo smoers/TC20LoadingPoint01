@@ -132,7 +132,7 @@ public class DownloadTask extends AsyncTask<String, Integer, DownloadTask.Result
             if (stream != null) {
                 callback.onProgressUpdate(DownloadCallback.Progress.PROCESS_INPUT_STREAM_IN_PROGRESS,0);
                 // Converts Stream to String with max length of 500.
-                result = readStream(stream, 500);
+                result = readStream(stream, 5000);
             }
 
         } finally {

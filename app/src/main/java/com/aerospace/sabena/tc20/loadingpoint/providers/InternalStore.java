@@ -47,6 +47,7 @@ public class InternalStore {
             sequences = gson.fromJson(json, new TypeToken<Sequences>() {
             }.getType());
             Log.d(Startup.LOG_TAG,"Sequences loaded " + String.valueOf(sequences.size()));
+            Log.d(Startup.LOG_TAG,json);
         }
         return sequences;
     }

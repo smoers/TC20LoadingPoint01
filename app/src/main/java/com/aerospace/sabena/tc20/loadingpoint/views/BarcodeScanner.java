@@ -3,6 +3,7 @@ package com.aerospace.sabena.tc20.loadingpoint.views;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -22,8 +23,10 @@ import com.aerospace.sabena.tc20.loadingpoint.Startup;
 import com.aerospace.sabena.tc20.loadingpoint.controllers.BarcodeScannerController;
 import com.aerospace.sabena.tc20.loadingpoint.controllers.ViewInterface;
 import com.aerospace.sabena.tc20.loadingpoint.listeners.BroadcastReceiverListener;
+import com.aerospace.sabena.tc20.loadingpoint.models.ConfigurationList;
 import com.aerospace.sabena.tc20.loadingpoint.models.User;
 import com.aerospace.sabena.tc20.loadingpoint.providers.BroadcastReceiverImplementation;
+import com.aerospace.sabena.tc20.loadingpoint.providers.ConfigurationStore;
 
 /**
  * Classe en charge de la vue utilisée pour le scan
@@ -45,8 +48,11 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
     private ImageButton bRemove;
     private ImageButton bExit;
     private ImageButton bProfile;
+    private ImageButton bSetup;
     private MediaPlayer mediaPlayer;
 
+    private ConfigurationStore store;
+    private ConfigurationList config;
     private User user;
 
     @Override
@@ -60,6 +66,12 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
      * Initialisation de la View
      */
     protected void initialize(){
+        store = new ConfigurationStore(BarcodeScanner.this);
+        config = store.load();
+        String[] validations = getResources().getStringArray(R.array.validation_barcode);
+        for(String validation : validations){
+            Log.d(Startup.LOG_TAG, validation);
+        }
         //Instance des composants
         tRoleNumber = (TextView) findViewById(R.id.tRoleNumber);
         tSequenceLength = (TextView) findViewById(R.id.tSequencesLength);
@@ -73,6 +85,7 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
         bExit = (ImageButton) findViewById(R.id.bExit);
         bProfile = (ImageButton) findViewById(R.id.bProfile);
         toolbarScanner = (Toolbar) findViewById(R.id.toolbar_scanner);
+        bSetup = (ImageButton) findViewById(R.id.bSetup);
         tCounter.setVisibility(View.INVISIBLE);
         iBarcode.setVisibility(View.VISIBLE);
         setSupportActionBar(toolbarScanner);        //layout
@@ -85,6 +98,16 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
             user = new User(roleNumber);
         } else {
             tRoleNumber.setText("ERROR");
+        }
+        /* L'icon Remove est disabled dans la bar de manu de l'interface
+        *  pour tous les utilisateurs, excepté pour le admin contenu dans la liste
+        *  users_admin du fichier de configuration
+        */
+        bRemove.setEnabled(false);
+        bRemove.setImageResource(R.mipmap.deletegray);
+        if (config.getConfiguration("users_admin").getListValue().contains(tRoleNumber.getText())){
+            bRemove.setEnabled(true);
+            bRemove.setImageResource(R.mipmap.delete);
         }
         //Event bouton
         bCancel.setOnClickListener(new View.OnClickListener() {
@@ -123,6 +146,7 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 barcodeScannerController.removeSequences();
+                                tSequenceLength.setText(barcodeScannerController.getSequencesLength());
                             }
                         })
                         .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -133,6 +157,14 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
                         })
                         .create()
                         .show();
+            }
+        });
+        bSetup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediaPlayer.start();
+                Intent stIntent = new Intent(BarcodeScanner.this, Setup.class);
+                startActivity(stIntent);
             }
         });
 
@@ -147,7 +179,7 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
         //Instance du controller de la view
         barcodeScannerController = new BarcodeScannerController(BarcodeScanner.this, user);
         //peuple l'interface utilisateur
-        tSequenceSize.setText(String.valueOf(getResources().getInteger(R.integer.barcode_scanner_sequence_size)));
+        tSequenceSize.setText(String.valueOf(config.getConfiguration("barcode_scanner_sequence_size").getIntValue()));
         //Capture des barcode
         broadcast.addBroadcastReceiverListener(new BroadcastReceiverListener() {
             @Override

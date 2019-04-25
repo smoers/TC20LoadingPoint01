@@ -38,6 +38,13 @@
             app:srcCompat="@mipmap/businessman" />
 
         <ImageButton
+            android:id="@+id/bSetup"
+            style="@style/Widget.AppCompat.Light.ActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@mipmap/mobilesetup" />
+
+        <ImageButton
             android:id="@+id/bExit"
             style="@style/Widget.AppCompat.Light.ActionButton"
             android:layout_width="wrap_content"
@@ -45,6 +52,8 @@
             app:srcCompat="@mipmap/exit" />
 
     </android.support.v7.widget.Toolbar>
+
+
 
     <TableLayout
         android:layout_width="match_parent"

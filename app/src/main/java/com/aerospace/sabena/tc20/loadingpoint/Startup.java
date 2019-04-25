@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.usb.UsbDevice;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,11 +14,15 @@ import com.aerospace.sabena.tc20.loadingpoint.datawedge.DataWedgeAction;
 import com.aerospace.sabena.tc20.loadingpoint.datawedge.DataWedgeExtraData;
 import com.aerospace.sabena.tc20.loadingpoint.datawedge.SendDataWedge;
 import com.aerospace.sabena.tc20.loadingpoint.listeners.BroadcastReceiverListener;
+import com.aerospace.sabena.tc20.loadingpoint.models.Configuration;
+import com.aerospace.sabena.tc20.loadingpoint.models.ConfigurationList;
 import com.aerospace.sabena.tc20.loadingpoint.providers.BroadcastReceiverImplementation;
+import com.aerospace.sabena.tc20.loadingpoint.providers.ConfigurationStore;
 import com.aerospace.sabena.tc20.loadingpoint.views.BarcodeScanner;
 import com.aerospace.sabena.tc20.loadingpoint.views.ProfileSetup;
-import com.symbol.emdk.EMDKManager;
-import com.symbol.emdk.ProfileManager;
+import com.aerospace.sabena.tc20.loadingpoint.views.Setup;
+
+import java.util.ArrayList;
 
 /**
  * Classe principale de l'application
@@ -88,6 +91,17 @@ public class Startup extends AppCompatActivity {
         SendDataWedge sendDataWedge = new SendDataWedge(Startup.this);
         sendDataWedge.send(DataWedgeAction.ACTION_DATAWEDGE, DataWedgeExtraData.EXTRA_GET_PROFILES_LIST,"");
 
+        //Charge et détermine l'existance d'un setup local
+        ConfigurationList configurationList = getConfiguration();
+        if (configurationList == null){
+            //S'il n'y pas de configurationList local & que le site est indisponible
+            //l'application est inutilisable.  Il faut au moins une fois disposer d'un wifi pour charger la config.
+            Intent stIntent = new Intent(Startup.this, Setup.class);
+            startActivity(stIntent);
+        } else {
+            Log.d(Startup.LOG_TAG, "Liste des items");
+            Log.d(Startup.LOG_TAG, String.valueOf(configurationList.size()));
+        }
     }
 
     @Override
@@ -132,6 +146,20 @@ public class Startup extends AppCompatActivity {
 
     private boolean isValidRoleNumber(String roleNumber){
         return roleNumber.matches("00\\d{5}$");
+    }
+
+    /**
+     * Charge le setup
+     * @return
+     */
+    public ConfigurationList getConfiguration(){
+        ConfigurationStore store = new ConfigurationStore(Startup.this);
+        if (store.webLoad())
+            Log.d(Startup.LOG_TAG,"Setup has been downloaded");
+        else
+            Log.d(Startup.LOG_TAG,"Setup cannot be downloaded");
+
+        return store.load();
     }
 
 }
