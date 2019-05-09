@@ -36,6 +36,8 @@ public class Sequence {
         return date;
     }
 
+    public void setDate(Date date){ this.date = date; }
+
     public void addBarcode(Barcode barcode){
         barcodes.add(barcode);
     }

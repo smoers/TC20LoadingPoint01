@@ -1,10 +1,13 @@
 package com.aerospace.sabena.tc20.loadingpoint.views;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -24,6 +27,7 @@ import com.aerospace.sabena.tc20.loadingpoint.controllers.BarcodeScannerControll
 import com.aerospace.sabena.tc20.loadingpoint.controllers.ViewInterface;
 import com.aerospace.sabena.tc20.loadingpoint.listeners.BroadcastReceiverListener;
 import com.aerospace.sabena.tc20.loadingpoint.models.ConfigurationList;
+import com.aerospace.sabena.tc20.loadingpoint.models.TaskAutomaticExportData;
 import com.aerospace.sabena.tc20.loadingpoint.models.User;
 import com.aerospace.sabena.tc20.loadingpoint.providers.BroadcastReceiverImplementation;
 import com.aerospace.sabena.tc20.loadingpoint.providers.ConfigurationStore;
@@ -54,6 +58,7 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
     private ConfigurationStore store;
     private ConfigurationList config;
     private User user;
+    private TaskAutomaticExportData taskAutomaticExportData = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -196,16 +201,24 @@ public class BarcodeScanner extends AppCompatActivity implements ViewInterface<B
                 }
             }
         });
+        //Enregistre un receiver afin de savoir quand la tâche d'export automatique a été invoquée.
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equalsIgnoreCase("com.aerospace.sabena.tc20.loadingpoint.TASK_AUTOMATIC_INVOCATED")){
+                    if (intent.getExtras().getBoolean("TASK_AUTOMATIC_INVOCATED")){
+                        gettSequenceLength().setText(String.valueOf(getController().getSequencesLength()));
+                        Log.d(Startup.LOG_TAG,"Broadcast Receiver TASK_AUTOMATIC_INVOCATED");
+                    }
+                }
+            }
+        };
 
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("com.aerospace.sabena.tc20.loadingpoint.TASK_AUTOMATIC_INVOCATED");
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(BarcodeScanner.this);
+        localBroadcastManager.registerReceiver(receiver, filter);
     }
-
-    /*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-    */
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

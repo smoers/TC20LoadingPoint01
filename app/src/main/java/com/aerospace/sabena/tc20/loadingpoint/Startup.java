@@ -16,6 +16,8 @@ import com.aerospace.sabena.tc20.loadingpoint.datawedge.SendDataWedge;
 import com.aerospace.sabena.tc20.loadingpoint.listeners.BroadcastReceiverListener;
 import com.aerospace.sabena.tc20.loadingpoint.models.Configuration;
 import com.aerospace.sabena.tc20.loadingpoint.models.ConfigurationList;
+import com.aerospace.sabena.tc20.loadingpoint.models.TaskAutomaticExportData;
+import com.aerospace.sabena.tc20.loadingpoint.models.TaskTest;
 import com.aerospace.sabena.tc20.loadingpoint.providers.BroadcastReceiverImplementation;
 import com.aerospace.sabena.tc20.loadingpoint.providers.ConfigurationStore;
 import com.aerospace.sabena.tc20.loadingpoint.views.BarcodeScanner;
@@ -23,6 +25,7 @@ import com.aerospace.sabena.tc20.loadingpoint.views.ProfileSetup;
 import com.aerospace.sabena.tc20.loadingpoint.views.Setup;
 
 import java.util.ArrayList;
+import java.util.Timer;
 
 /**
  * Classe principale de l'application
@@ -35,6 +38,9 @@ public class Startup extends AppCompatActivity {
     public static final String LOG_TAG = "LoadingPoint1";
     //Instance du receiver, récupère les données en provenance du DataWedge
     private BroadcastReceiverImplementation broadcast = new BroadcastReceiverImplementation(Startup.this);
+    private Timer automaticTask = new Timer();
+    private Timer test = new Timer();
+    private TaskAutomaticExportData task = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +107,22 @@ public class Startup extends AppCompatActivity {
         } else {
             Log.d(Startup.LOG_TAG, "Liste des items");
             Log.d(Startup.LOG_TAG, String.valueOf(configurationList.size()));
+            //tache automatique d'export
+            Configuration[] configurations = configurationList.getConfiguration("automatic_task").getConfigurationValue();
+            if(Configuration.getConfiguration(configurations,"enabled").getBooleanValue()){
+                task = new TaskAutomaticExportData(Startup.this);
+                Long delay = Long.valueOf(Configuration.getConfiguration(configurations,"delay").getIntValue().longValue());
+                automaticTask.schedule(task,delay * 1000,delay * 1000);
+                //automaticTask.schedule(task,15000,15000);
+                Log.d(Startup.LOG_TAG, "Automatic Export Timer is enabled");
+            }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        automaticTask.cancel();
     }
 
     @Override

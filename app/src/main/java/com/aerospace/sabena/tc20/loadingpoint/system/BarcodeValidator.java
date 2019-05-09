@@ -1,9 +1,7 @@
 package com.aerospace.sabena.tc20.loadingpoint.system;
 
-import android.util.Log;
-
-import com.aerospace.sabena.tc20.loadingpoint.Startup;
 import com.aerospace.sabena.tc20.loadingpoint.models.Barcode;
+import com.aerospace.sabena.tc20.loadingpoint.models.Sequence;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,4 +57,24 @@ public class BarcodeValidator {
         BarcodeValidator barcodeValidator = new BarcodeValidator(validators);
         return barcodeValidator.isValid(barcode);
     }
+
+    /**
+     * Détermine si le format du barcode existe déjà dans la séquence
+     * @param sequence
+     * @param barcode
+     * @return
+     */
+    public boolean isExist(Sequence sequence, Barcode barcode){
+        if (sequence != null) {
+            for (String validator : validators) {
+                for (Barcode sBarcode : sequence.getBarcodes()) {
+                    if (Utils.findString(validator, sBarcode.getCode()) == Utils.findString(validator, barcode.getCode())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 }

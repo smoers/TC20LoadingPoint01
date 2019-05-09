@@ -84,24 +84,28 @@ public class SequenceManagementController {
      */
     public boolean transfer(){
         boolean result = false;
-        ExternalStore store = new ExternalStore(sequenceManagement);
-        //Instance de la classe qui va prendre en charge le tri des codes bar
-        BarcodeOrdering barcodeOrdering = new BarcodeOrdering(configurationList.getConfiguration("barcode_ordering").getConfigurationValue());
-        //Instance de la classe qui va formatter les données de sortie
-        SequenceFormatter formatter = new SequenceFormatter(internalStore.loadSequences(),barcodeOrdering);
-        //nom du fichier
-        String fileName = fileNameGenerator();
-        //On s'assure que le store est disponible
-        if (store.open()){
-            Log.d(Startup.LOG_TAG, "External storage open");
-            if (store.write(Environment.DIRECTORY_DOCUMENTS, fileName,formatter.getString())) {
-                internalStore.removeSequences(); // Vide l'InternalStore
-                Toast.makeText(sequenceManagement, "The data has been saved in the texte file " + fileName, Toast.LENGTH_LONG).show();
-                result = true;
-            } else {
-                Toast.makeText(sequenceManagement, "The data CANNOT be saved !!", Toast.LENGTH_LONG).show();
+        if (sequences.size() > 0) {
+            ExternalStore store = new ExternalStore(sequenceManagement);
+            //Instance de la classe qui va prendre en charge le tri des codes bar
+            BarcodeOrdering barcodeOrdering = new BarcodeOrdering(configurationList.getConfiguration("barcode_ordering").getConfigurationValue());
+            //Instance de la classe qui va formatter les données de sortie
+            SequenceFormatter formatter = new SequenceFormatter(internalStore.loadSequences(), barcodeOrdering);
+            //nom du fichier
+            String fileName = fileNameGenerator();
+            //On s'assure que le store est disponible
+            if (store.open()) {
+                Log.d(Startup.LOG_TAG, "External storage open");
+                if (store.write(Environment.DIRECTORY_DOCUMENTS, fileName, formatter.getString())) {
+                    internalStore.removeSequences(); // Vide l'InternalStore
+                    Toast.makeText(sequenceManagement, "The data has been saved in the texte file " + fileName, Toast.LENGTH_LONG).show();
+                    result = true;
+                } else {
+                    Toast.makeText(sequenceManagement, "The data CANNOT be saved !!", Toast.LENGTH_LONG).show();
+                }
+                Log.d(Startup.LOG_TAG, "External storage write");
             }
-            Log.d(Startup.LOG_TAG, "External storage write");
+        } else {
+            Toast.makeText(sequenceManagement, "There is not sequences saved !!", Toast.LENGTH_LONG).show();
         }
         return result;
     }
@@ -114,68 +118,72 @@ public class SequenceManagementController {
     public boolean internetTransfer(){
         //Init result upload
         boolean isUpload = false;
-        //Instance InternetStore pour effectuer le transfert
-        final InternetStore store = new InternetStore(sequenceManagement);
-        Log.d(Startup.LOG_TAG,"InternetStore testing witness");
-        //On s'assure que le serveur est joinable, que l'on a du wifi, ...
-        boolean available = store.isAvailable();
-        Log.d(Startup.LOG_TAG,"InternetStore witness is present : " + String.valueOf(available));
-        if (available) {
-            sequenceManagement.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(sequenceManagement, "Internet upload started", Toast.LENGTH_LONG).show();
-                }
-            });            //Si tout est OK
-            //Instance de la classe qui va prendre en charge le tri des codes bar
-            BarcodeOrdering barcodeOrdering = new BarcodeOrdering(configurationList.getConfiguration("barcode_ordering").getConfigurationValue());
-            //Instance de la classe qui va formatter les données de sortie
-            SequenceFormatter formatter = new SequenceFormatter(internalStore.loadSequences(),barcodeOrdering);
-            //nom du fichier
-            String fileName = fileNameGenerator();
-            //création du fichier temporaire car l'upload a besoin d'un objet File
-            //le fichier est créer dans le répertoire propre au package de l'application
-            //Comme le tranfert est asynchrone le fichier sera détruit par la classe UploadTask
-            File directory = sequenceManagement.getDataDir();
-            File file = new File(directory, fileName);
-            try {
-                //écriture des données
-                FileOutputStream fileOutputStream = new FileOutputStream(file,false);
-                fileOutputStream.write(formatter.getString().getBytes());
-                fileOutputStream.flush();
-                fileOutputStream.close();
-                if (file.exists()) {
-                    //si le fichier a bien été créé on effectue le transfert
-                    isUpload = store.upload(file, fileName);
-                    if (isUpload){
-                        //Upload est terminé avec succès
-                        internalStore.removeSequences();
-                        sequenceManagement.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(sequenceManagement, "Internet upload is finished with success", Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    } else {
-                        sequenceManagement.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(sequenceManagement, "Internet server return error : " + store.getResult(), Toast.LENGTH_LONG).show();
-                            }
-                        });
+        if (sequences.size() > 0) {
+            //Instance InternetStore pour effectuer le transfert
+            final InternetStore store = new InternetStore(sequenceManagement);
+            Log.d(Startup.LOG_TAG, "InternetStore testing witness");
+            //On s'assure que le serveur est joinable, que l'on a du wifi, ...
+            boolean available = store.isAvailable();
+            Log.d(Startup.LOG_TAG, "InternetStore witness is present : " + String.valueOf(available));
+            if (available) {
+                sequenceManagement.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(sequenceManagement, "Internet upload started", Toast.LENGTH_LONG).show();
                     }
-                    file.delete();
+                });            //Si tout est OK
+                //Instance de la classe qui va prendre en charge le tri des codes bar
+                BarcodeOrdering barcodeOrdering = new BarcodeOrdering(configurationList.getConfiguration("barcode_ordering").getConfigurationValue());
+                //Instance de la classe qui va formatter les données de sortie
+                SequenceFormatter formatter = new SequenceFormatter(internalStore.loadSequences(), barcodeOrdering);
+                //nom du fichier
+                String fileName = fileNameGenerator();
+                //création du fichier temporaire car l'upload a besoin d'un objet File
+                //le fichier est créer dans le répertoire propre au package de l'application
+                //Comme le tranfert est asynchrone le fichier sera détruit par la classe UploadTask
+                File directory = sequenceManagement.getDataDir();
+                File file = new File(directory, fileName);
+                try {
+                    //écriture des données
+                    FileOutputStream fileOutputStream = new FileOutputStream(file, false);
+                    fileOutputStream.write(formatter.getString().getBytes());
+                    fileOutputStream.flush();
+                    fileOutputStream.close();
+                    if (file.exists()) {
+                        //si le fichier a bien été créé on effectue le transfert
+                        isUpload = store.upload(file, fileName);
+                        if (isUpload) {
+                            //Upload est terminé avec succès
+                            internalStore.removeSequences();
+                            sequenceManagement.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(sequenceManagement, "Internet upload is finished with success", Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        } else {
+                            sequenceManagement.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(sequenceManagement, "Internet server return error : " + store.getResult(), Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                        file.delete();
+                    }
+                } catch (IOException e) {
+                    Log.d(Startup.LOG_TAG, e.getMessage());
                 }
-            } catch (IOException e) {
-                Log.d(Startup.LOG_TAG, e.getMessage());
+            } else {
+                sequenceManagement.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(sequenceManagement, "Internet web site not available", Toast.LENGTH_LONG).show();
+                    }
+                });
             }
         } else {
-            sequenceManagement.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(sequenceManagement, "Internet web site not available", Toast.LENGTH_LONG).show();
-                }
-            });
+            Toast.makeText(sequenceManagement, "There is not sequences saved !!", Toast.LENGTH_LONG).show();
         }
         return isUpload;
     }

@@ -1,7 +1,6 @@
 package com.aerospace.sabena.tc20.loadingpoint.models;
 
 import java.util.List;
-import java.util.StringJoiner;
 
 public class Configuration {
 
@@ -11,6 +10,23 @@ public class Configuration {
     private List<String> listValue = null;
     private Configuration[] configurationValue = null;
     private String key = null;
+
+    /**
+     * Retourne l'objet Configuration correspondant à la clé
+     * @param configurations
+     * @param key
+     * @return
+     */
+    public static Configuration getConfiguration(Configuration[] configurations, String key){
+        Configuration configuration = null;
+        for (int i=0;i<configurations.length;i++){
+            if (configurations[i].getKey().equalsIgnoreCase(key)){
+                configuration = configurations[i];
+                break;
+            }
+        }
+        return configuration;
+    }
 
     public Configuration(String stringValue, String key) {
         this.stringValue = stringValue;

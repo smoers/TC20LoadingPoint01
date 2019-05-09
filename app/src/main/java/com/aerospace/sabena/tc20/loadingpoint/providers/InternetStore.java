@@ -9,11 +9,18 @@ import android.widget.Toast;
 
 import com.aerospace.sabena.tc20.loadingpoint.R;
 import com.aerospace.sabena.tc20.loadingpoint.Startup;
+import com.aerospace.sabena.tc20.loadingpoint.models.ConfigurationList;
+import com.aerospace.sabena.tc20.loadingpoint.models.FileNameGenerator;
+import com.aerospace.sabena.tc20.loadingpoint.models.Sequences;
+import com.aerospace.sabena.tc20.loadingpoint.system.BarcodeOrdering;
+import com.aerospace.sabena.tc20.loadingpoint.system.SequenceFormatter;
 import com.aerospace.sabena.tc20.loadingpoint.system.network.DownloadCallback;
 import com.aerospace.sabena.tc20.loadingpoint.system.network.DownloadTask;
 import com.aerospace.sabena.tc20.loadingpoint.system.network.UploadTask;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
@@ -26,11 +33,15 @@ public class InternetStore implements DownloadCallback<String> {
     private final String SERVER_URL_UPLOAD;
     //Resultat retouner par la tâche
     private String result;
+    //Configuration
+    private ConfigurationList configurationList;
 
     private AppCompatActivity app;
 
     public InternetStore(AppCompatActivity app) {
         this.app = app;
+        ConfigurationStore store = new ConfigurationStore(app);
+        configurationList = store.load();
         //ID du serveur web
         SERVER_ID = this.app.getResources().getString(R.string.server_id);
         SERVER_URL = this.app.getResources().getString(R.string.server_url);
@@ -77,6 +88,38 @@ public class InternetStore implements DownloadCallback<String> {
                 isUpload = true;
         } else if (result != null && result.exception != null) {
             Log.d(Startup.LOG_TAG, result.exception.getMessage());
+        }
+        return isUpload;
+    }
+
+    public boolean upload(Sequences sequences){
+        //Init result upload
+        boolean isUpload = false;
+        //Instance de la classe qui va prendre en charge le tri des codes bar
+        BarcodeOrdering barcodeOrdering = new BarcodeOrdering(configurationList.getConfiguration("barcode_ordering").getConfigurationValue());
+        //Instance de la classe qui va formatter les données de sortie
+        SequenceFormatter formatter = new SequenceFormatter(sequences,barcodeOrdering);
+        //nom du fichier
+        FileNameGenerator fileNameGenerator = new FileNameGenerator(app);
+        String fileName = fileNameGenerator.getName();
+        //création du fichier temporaire car l'upload a besoin d'un objet File
+        //le fichier est créer dans le répertoire propre au package de l'application
+        //Comme le tranfert est asynchrone le fichier sera détruit par la classe UploadTask
+        File directory = app.getDataDir();
+        File file = new File(directory, fileName);
+        try {
+            //écriture des données
+            FileOutputStream fileOutputStream = new FileOutputStream(file,false);
+            fileOutputStream.write(formatter.getString().getBytes());
+            fileOutputStream.flush();
+            fileOutputStream.close();
+            if (file.exists()) {
+                //si le fichier a bien été créé on effectue le transfert
+                isUpload = upload(file, fileName);
+                file.delete();
+            }
+        } catch (IOException e) {
+            Log.d(Startup.LOG_TAG, e.getMessage());
         }
         return isUpload;
     }
